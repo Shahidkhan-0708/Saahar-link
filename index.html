@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saahar-Link — Smart Urban & Community Connection Platform</title>
+  <meta name="description" content="Saahar-Link bridges urban resources, public services, transport, and community networks into one unified digital portal.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="dark">
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <!-- Header / Nav -->
+  <header class="navbar" id="main-nav">
+    <div class="nav-container">
+      <a href="#" class="brand-logo" id="brand-logo">
+        <span class="logo-icon">✦</span>
+        <span class="logo-text">Saahar<span class="accent-text">Link</span></span>
+      </a>
+      
+      <nav class="nav-links" id="nav-menu">
+        <a href="#services" class="nav-link" id="nav-link-services">Services</a>
+        <a href="#initiatives" class="nav-link" id="nav-link-initiatives">Initiatives</a>
+        <a href="#stats" class="nav-link" id="nav-link-stats">Impact</a>
+        <a href="#bulletin" class="nav-link" id="nav-link-bulletin">Live Bulletin</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle theme">
+          <span class="theme-icon" id="theme-icon">☀️</span>
+        </button>
+        <a href="#connect" class="btn btn-primary" id="btn-portal-access">Access Portal</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main>
+    <section class="hero-section" id="hero">
+      <div class="hero-content">
+        <div class="status-badge" id="live-status-pill">
+          <span class="pulse-dot"></span>
+          <span>Live Urban Gateway • 24/7 Connectivity</span>
+        </div>
+        
+        <h1 class="hero-title">
+          Connecting Communities to <br/>
+          <span class="gradient-text">Vital Urban Resources</span>
+        </h1>
+        
+        <p class="hero-subtitle">
+          Saahar-Link is an intelligent civic connectivity network that unifies transit updates, essential services, citizen support, and local municipal assistance in real time.
+        </p>
+
+        <!-- Service Search Bar -->
+        <div class="search-box" id="search-container">
+          <div class="search-input-wrap">
+            <svg class="search-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="service-search-input" placeholder="Search urban services (e.g. Healthcare, Transit, Permits, Water supply)..." autocomplete="off" />
+          </div>
+          <button class="btn btn-search" id="btn-search-trigger">Search</button>
+        </div>
+
+        <!-- Quick filter chips -->
+        <div class="quick-tags" id="filter-chips">
+          <span class="tag-label">Popular:</span>
+          <button class="tag-chip active" data-filter="all" id="chip-all">All</button>
+          <button class="tag-chip" data-filter="health" id="chip-health">Healthcare</button>
+          <button class="tag-chip" data-filter="transit" id="chip-transit">Transport</button>
+          <button class="tag-chip" data-filter="civic" id="chip-civic">Municipal Care</button>
+          <button class="tag-chip" data-filter="emergency" id="chip-emergency">Emergency</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Services Grid -->
+    <section class="section-container" id="services">
+      <div class="section-header">
+        <h2 class="section-title">Integrated Civic Services</h2>
+        <p class="section-desc">Instantly access public infrastructure and neighborhood assistance hubs.</p>
+      </div>
+
+      <div class="cards-grid" id="service-cards-container">
+        <!-- Card 1 -->
+        <div class="service-card" data-category="transit" id="card-transit">
+          <div class="card-icon transit-icon">🚊</div>
+          <div class="card-header-badge">Real-time</div>
+          <h3>Smart City Transit</h3>
+          <p>Real-time bus, metro schedules, and commuter alerts to streamline daily mobility.</p>
+          <div class="card-footer">
+            <span class="status-indicator online">Active Line Feed</span>
+            <button class="card-btn" id="btn-view-transit">View Routes →</button>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="service-card" data-category="health" id="card-health">
+          <div class="card-icon health-icon">🏥</div>
+          <div class="card-header-badge">Verified</div>
+          <h3>Urban Health Network</h3>
+          <p>Locate nearby clinics, primary care centers, blood banks, and 24/7 pharmacies.</p>
+          <div class="card-footer">
+            <span class="status-indicator online">28 Centers Open</span>
+            <button class="card-btn" id="btn-view-health">Explore →</button>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="service-card" data-category="emergency" id="card-emergency">
+          <div class="card-icon emergency-icon">🚨</div>
+          <div class="card-header-badge urgent">Priority</div>
+          <h3>Emergency Assistance</h3>
+          <p>Rapid dispatch contact, disaster response alerts, and direct lifeline emergency support.</p>
+          <div class="card-footer">
+            <span class="status-indicator urgent-status">Hotline: 112 Ready</span>
+            <button class="card-btn urgent-btn" id="btn-view-emergency">SOS Hub →</button>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="service-card" data-category="civic" id="card-civic">
+          <div class="card-icon civic-icon">🏛️</div>
+          <div class="card-header-badge">Self-service</div>
+          <h3>Civic Grievances & Grievance Link</h3>
+          <p>Log municipal requests, track water/power works, sanitation, and street maintenance.</p>
+          <div class="card-footer">
+            <span class="status-indicator online">Avg. Resolution: 48h</span>
+            <button class="card-btn" id="btn-view-civic">File Issue →</button>
+          </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="service-card" data-category="civic" id="card-community">
+          <div class="card-icon community-icon">🤝</div>
+          <div class="card-header-badge">Community</div>
+          <h3>Local Markets & Cooperatives</h3>
+          <p>Connect urban consumers directly with regional farmers, artisans, and green initiatives.</p>
+          <div class="card-footer">
+            <span class="status-indicator online">14 Markets Active</span>
+            <button class="card-btn" id="btn-view-community">Browse →</button>
+          </div>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="service-card" data-category="transit" id="card-parking">
+          <div class="card-icon green-icon">⚡</div>
+          <div class="card-header-badge">Green Tech</div>
+          <h3>EV Stations & Mobility Hubs</h3>
+          <p>Interactive charging station availability and electric bike sharing kiosks.</p>
+          <div class="card-footer">
+            <span class="status-indicator online">42 Ports Free</span>
+            <button class="card-btn" id="btn-view-ev">Find Chargers →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Real-time Metrics & Impact -->
+    <section class="section-container stats-section" id="stats">
+      <div class="stats-grid">
+        <div class="stat-item" id="stat-citizens">
+          <div class="stat-number" data-target="150000">150,000+</div>
+          <div class="stat-label">Citizens Connected</div>
+        </div>
+        <div class="stat-item" id="stat-transit">
+          <div class="stat-number" data-target="450">450+</div>
+          <div class="stat-label">Civic Access Points</div>
+        </div>
+        <div class="stat-item" id="stat-speed">
+          <div class="stat-number" data-target="99.9">99.9%</div>
+          <div class="stat-label">Gateway Uptime</div>
+        </div>
+        <div class="stat-item" id="stat-response">
+          <div class="stat-number" data-target="12">12 Min</div>
+          <div class="stat-label">Average Response Time</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Live Community Bulletin -->
+    <section class="section-container" id="bulletin">
+      <div class="section-header">
+        <h2 class="section-title">City Pulse & Live Bulletin</h2>
+        <p class="section-desc">Stay informed with direct notices from community administrators and civic departments.</p>
+      </div>
+
+      <div class="bulletin-wrapper">
+        <div class="bulletin-list" id="bulletin-items">
+          <div class="bulletin-card" id="bulletin-item-1">
+            <div class="bulletin-time">Just now</div>
+            <div class="bulletin-body">
+              <span class="bulletin-tag tag-transit">Transit</span>
+              <h4>North Sector Metro Extension Operational</h4>
+              <p>Green Line trains now running on 4-minute intervals during peak commute hours.</p>
+            </div>
+          </div>
+
+          <div class="bulletin-card" id="bulletin-item-2">
+            <div class="bulletin-time">25m ago</div>
+            <div class="bulletin-body">
+              <span class="bulletin-tag tag-utility">Utilities</span>
+              <h4>Scheduled Water Line Upgrades: East Ward</h4>
+              <p>Maintenance completed ahead of schedule. Normal pressurized distribution resumed.</p>
+            </div>
+          </div>
+
+          <div class="bulletin-card" id="bulletin-item-3">
+            <div class="bulletin-time">2h ago</div>
+            <div class="bulletin-body">
+              <span class="bulletin-tag tag-event">Community</span>
+              <h4>Weekend Farmers & Artisan Market</h4>
+              <p>Central Plaza hosting 40+ organic food growers and handicrafts this Saturday morning.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Connect / Interactive Contact Section -->
+    <section class="section-container connect-section" id="connect">
+      <div class="connect-card">
+        <div class="connect-text">
+          <h2>Need Immediate Assistance or Have Feedback?</h2>
+          <p>Saahar-Link connects directly to public ward representatives and city emergency coordinators.</p>
+        </div>
+        <form class="connect-form" id="quick-connect-form">
+          <div class="form-group">
+            <label for="user-name">Your Name</label>
+            <input type="text" id="user-name" placeholder="P. Shahid Khan" required />
+          </div>
+          <div class="form-group">
+            <label for="user-email">Email or Phone</label>
+            <input type="text" id="user-email" placeholder="shahid@example.com" required />
+          </div>
+          <div class="form-group">
+            <label for="service-type">Inquiry Category</label>
+            <select id="service-type">
+              <option value="civic">General Civic Inquiry</option>
+              <option value="transport">Public Transit</option>
+              <option value="emergency">Emergency / Priority</option>
+              <option value="feedback">Platform Suggestion</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" id="btn-submit-inquiry">Send Inquiry</button>
+          <div class="form-response" id="form-feedback-message"></div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <div class="brand-logo">
+          <span class="logo-icon">✦</span>
+          <span class="logo-text">Saahar<span class="accent-text">Link</span></span>
+        </div>
+        <p class="footer-caption">Empowering smart, resilient, and interconnected neighborhoods.</p>
+      </div>
+      <div class="footer-links">
+        <div class="link-col">
+          <h5>Platform</h5>
+          <a href="#services">Services</a>
+          <a href="#bulletin">Live Bulletin</a>
+          <a href="#stats">Impact Metrics</a>
+        </div>
+        <div class="link-col">
+          <h5>Community</h5>
+          <a href="https://github.com/Shahidkhan-0708/Saahar-link" target="_blank" rel="noopener">GitHub Repository</a>
+          <a href="#connect">Contact Support</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Saahar-Link. Open Civic Connectivity Network.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
