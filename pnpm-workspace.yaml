@@ -1,0 +1,11 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# esbuild needs its install script (vite/tsx depend on it)
+onlyBuiltDependencies:
+  - esbuild
+  - better-sqlite3
+allowBuilds:
+  better-sqlite3: set this to true or false
+  esbuild: set this to true or false

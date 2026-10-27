@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --gov-navy: #0F172A;
+    --gov-blue: #2563EB;
+    --gov-teal: #2563EB;
+    --gov-teal-dark: #1E40AF;
+    --gov-teal-light: #3B82F6;
+    --gov-saffron: #D97706;
+    --gov-green: #2563EB;
+    --gov-cream: #F8FAFC;
+    --gov-card: #FFFFFF;
+    --gov-border: #E2E8F0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #F8FAFC;
+    color: #1E293B;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Custom Sahakar-Link civic utilities in Sovereign Blue */
+.bg-sahakar-teal {
+  background-color: #2563EB;
+}
+.bg-sahakar-teal-dark {
+  background-color: #1E40AF;
+}
+.text-sahakar-teal {
+  color: #2563EB;
+}
+.border-sahakar-teal {
+  border-color: #2563EB;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #94A3B8;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #64748B;
+}

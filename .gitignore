@@ -1,1 +1,18 @@
 .vercel
+
+# Parsed requirement documents (generated)
+.firecrawl/
+
+# Node
+node_modules/
+dist/
+.turbo/
+*.tsbuildinfo
+.env
+.env.*
+*.local
+
+# Local Fabric runtime data
+*.sqlite
+*.sqlite3
+data/

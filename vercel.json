@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "buildCommand": "cd sahar/frontend && npm install && npm run build",
+  "outputDirectory": "sahar/frontend/dist",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/sahar/api/index.py"
+    },
+    {
+      "source": "/docs",
+      "destination": "/sahar/api/index.py"
+    },
+    {
+      "source": "/openapi.json",
+      "destination": "/sahar/api/index.py"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

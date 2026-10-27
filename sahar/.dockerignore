@@ -1,0 +1,16 @@
+node_modules
+dist
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.git
+.github
+.agents
+.cursor
+.opencode
+.env
+.venv
+venv
+*.log
+*.tmp

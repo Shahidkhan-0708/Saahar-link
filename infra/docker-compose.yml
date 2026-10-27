@@ -1,0 +1,36 @@
+services:
+  # ADR-013: PostgreSQL is the authoritative store; pgvector for RAG (ADR-019)
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sahakar
+      POSTGRES_PASSWORD: sahakar
+      POSTGRES_DB: sahakar
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sahakar -d sahakar"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Object storage for course content packages (blueprint §1 content_ref keys)
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: sahakar
+      MINIO_ROOT_PASSWORD: sahakar-secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+
+volumes:
+  pgdata:
+  miniodata:

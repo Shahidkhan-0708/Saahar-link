@@ -1,0 +1,25 @@
+services:
+  sahakar-link:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sahakar_link_app
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - API_HOST=0.0.0.0
+      - DATABASE_URL=sqlite:////app/backend/sahakar_link.db
+      - SECRET_KEY=sahakar-link-sih26087-super-secret-jwt-key-2026
+    volumes:
+      - sahakar_data:/app/backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  sahakar_data:
+    driver: local

@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: sahakar-link
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: "pip install -r requirements.txt && cd frontend && npm install && npm run build && cd .."
+    startCommand: "python -m backend.serve"
+    healthCheckPath: "/api/health"
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: API_HOST
+        value: 0.0.0.0
+      - key: SECRET_KEY
+        generateValue: true
