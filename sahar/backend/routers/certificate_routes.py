@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import json
 import datetime
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from backend.database import get_db
 from backend.models import Certificate, Course, User, UserRole, TraineeSkill, Skill
 from backend.auth import get_current_user, require_roles
@@ -18,7 +18,7 @@ def get_my_certificates(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    certs = db.query(Certificate).filter(Certificate.trainee_id == current_user.id).all()
+    certs = db.query(Certificate).options(joinedload(Certificate.course)).filter(Certificate.trainee_id == current_user.id).all()
     results = []
     for c in certs:
         meta = json.loads(c.metadata_json) if c.metadata_json else {}
@@ -37,7 +37,10 @@ def get_my_certificates(
 
 @router.get("/{cert_id}")
 def get_certificate_detail(cert_id: str, db: Session = Depends(get_db)):
-    cert = db.query(Certificate).filter(Certificate.certificate_id == cert_id).first()
+    cert = db.query(Certificate).options(
+        joinedload(Certificate.trainee).joinedload(User.institute),
+        joinedload(Certificate.course)
+    ).filter(Certificate.certificate_id == cert_id).first()
     if not cert:
         raise HTTPException(status_code=404, detail="Certificate not found")
 
@@ -71,7 +74,10 @@ def verify_certificate_public(cert_id: str, db: Session = Depends(get_db)):
     Performs real cryptographic Ed25519 verification of the digital signature.
     Works offline or online without requiring recruiter login.
     """
-    cert = db.query(Certificate).filter(Certificate.certificate_id == cert_id).first()
+    cert = db.query(Certificate).options(
+        joinedload(Certificate.trainee).joinedload(User.institute),
+        joinedload(Certificate.course)
+    ).filter(Certificate.certificate_id == cert_id).first()
     if not cert:
         return {
             "is_valid": False,
@@ -150,7 +156,10 @@ def generate_selective_disclosure(
     req: SelectiveDisclosureRequest,
     db: Session = Depends(get_db)
 ):
-    cert = db.query(Certificate).filter(Certificate.certificate_id == cert_id).first()
+    cert = db.query(Certificate).options(
+        joinedload(Certificate.trainee).joinedload(User.institute),
+        joinedload(Certificate.course)
+    ).filter(Certificate.certificate_id == cert_id).first()
     if not cert:
         raise HTTPException(status_code=404, detail="Certificate not found")
 

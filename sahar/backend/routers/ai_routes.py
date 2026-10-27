@@ -1,9 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
-from sqlalchemy.orm import Session
+import json
+from sqlalchemy.orm import Session, joinedload
 from backend.database import get_db
-from backend.models import User, TraineeSkill, Certificate, Course, Job
+from backend.models import (
+    User, TraineeSkill, Certificate, Course, Module, Lesson,
+    LessonProgress, QuizAttempt, Job
+)
 from backend.auth import get_current_user
 from backend.rag import rag_pipeline
 from backend.matcher import ExplainableCandidateMatcher
@@ -39,22 +43,29 @@ def get_skill_gap_analysis(
     """Deeply connected skill-gap analysis connecting:
     Trainee -> verified skills -> completed courses -> assessment results -> certificates -> target job requirements -> missing skills -> recommended courses -> career pathway.
     """
-    from backend.models import QuizAttempt, Certificate, Course, LessonProgress
-
-    t_skills = db.query(TraineeSkill).filter(TraineeSkill.trainee_id == current_user.id).all()
+    t_skills = db.query(TraineeSkill).options(
+        joinedload(TraineeSkill.skill)
+    ).filter(TraineeSkill.trainee_id == current_user.id).all()
     skill_names = [ts.skill.name for ts in t_skills if ts.skill]
 
-    # Gather completed courses
-    courses = db.query(Course).all()
+    # Gather completed courses with eager loading
+    courses = db.query(Course).options(
+        joinedload(Course.modules).joinedload(Module.lessons)
+    ).all()
+
+    # Single query for completed lesson IDs
+    completed_lids = set(
+        lp[0] for lp in db.query(LessonProgress.lesson_id).filter(
+            LessonProgress.trainee_id == current_user.id,
+            LessonProgress.completed == True
+        ).all()
+    )
+
     completed_courses_data = []
     for c in courses:
         total = sum(len(m.lessons) for m in c.modules)
         c_lids = [l.id for m in c.modules for l in m.lessons]
-        comp_count = db.query(LessonProgress).filter(
-            LessonProgress.trainee_id == current_user.id,
-            LessonProgress.completed == True,
-            LessonProgress.lesson_id.in_(c_lids)
-        ).count()
+        comp_count = sum(1 for lid in c_lids if lid in completed_lids)
         if comp_count > 0:
             completed_courses_data.append({
                 "id": c.id,
@@ -103,14 +114,18 @@ def get_personalized_recommendations(
     db: Session = Depends(get_db)
 ):
     """Recommends courses and jobs specifically tailored to trainee's verified skill profile."""
-    t_skills = db.query(TraineeSkill).filter(TraineeSkill.trainee_id == current_user.id).all()
+    t_skills = db.query(TraineeSkill).options(
+        joinedload(TraineeSkill.skill)
+    ).filter(TraineeSkill.trainee_id == current_user.id).all()
     cand_skill_names = [ts.skill.name for ts in t_skills if ts.skill]
-    has_cert = db.query(Certificate).filter(Certificate.trainee_id == current_user.id).first() is not None
+    has_cert = db.query(Certificate.id).filter(
+        Certificate.trainee_id == current_user.id,
+        Certificate.revoked == False
+    ).first() is not None
 
     # Find jobs with highest match
     all_jobs = db.query(Job).filter(Job.status == "OPEN").all()
     scored_jobs = []
-    import json
     for j in all_jobs:
         req_skills = json.loads(j.required_skills_json) if j.required_skills_json else []
         match = ExplainableCandidateMatcher.calculate_match(
@@ -134,14 +149,14 @@ def get_personalized_recommendations(
     scored_jobs.sort(key=lambda x: x["match"]["overall_match"], reverse=True)
 
     # Course recommendations
-    courses = db.query(Course).all()
+    courses = db.query(Course.id, Course.title, Course.code, Course.category).all()
     rec_courses = []
     for c in courses:
         rec_courses.append({
-            "course_id": c.id,
-            "title": c.title,
-            "code": c.code,
-            "category": c.category,
+            "course_id": c[0],
+            "title": c[1],
+            "code": c[2],
+            "category": c[3],
             "benefit": "Fulfills mandatory competency for State Cooperative Bank recruitment."
         })
 

@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import json
 import datetime
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 from backend.database import get_db
 from backend.models import (
     Course, Module, Lesson, LessonProgress, Quiz, QuizQuestion, QuizAttempt,
@@ -20,29 +20,36 @@ class QuizSubmitRequest(BaseModel):
 
 @router.get("/courses")
 def list_courses(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    courses = db.query(Course).all()
-    results = []
+    # 1. Eagerly load all courses, modules, and lessons in a single query
+    courses = db.query(Course).options(
+        joinedload(Course.modules).joinedload(Module.lessons)
+    ).all()
 
-    # Get completed lessons for this trainee
+    # 2. Single query for user's completed lessons
     completed_lesson_ids = set(
-        lp.lesson_id for lp in db.query(LessonProgress).filter(
+        lp[0] for lp in db.query(LessonProgress.lesson_id).filter(
             LessonProgress.trainee_id == current_user.id,
             LessonProgress.completed == True
         ).all()
     )
 
+    # 3. Single query for user's certificates mapped by course_id
+    user_certs = {
+        c.course_id: c.certificate_id
+        for c in db.query(Certificate.course_id, Certificate.certificate_id).filter(
+            Certificate.trainee_id == current_user.id,
+            Certificate.revoked == False
+        ).all()
+    }
+
+    results = []
     for c in courses:
         total_lessons = sum(len(m.lessons) for m in c.modules)
         course_lesson_ids = [l.id for m in c.modules for l in m.lessons]
         completed_in_course = sum(1 for lid in course_lesson_ids if lid in completed_lesson_ids)
 
         progress_pct = round((completed_in_course / total_lessons * 100), 1) if total_lessons > 0 else 0
-
-        # Check if certified
-        cert = db.query(Certificate).filter(
-            Certificate.trainee_id == current_user.id,
-            Certificate.course_id == c.id
-        ).first()
+        cert_id = user_certs.get(c.id)
 
         results.append({
             "id": c.id,
@@ -54,19 +61,21 @@ def list_courses(current_user: User = Depends(get_current_user), db: Session = D
             "total_lessons": total_lessons,
             "completed_lessons": completed_in_course,
             "progress_percentage": progress_pct,
-            "has_certificate": cert is not None,
-            "certificate_id": cert.certificate_id if cert else None
+            "has_certificate": cert_id is not None,
+            "certificate_id": cert_id
         })
     return results
 
 @router.get("/courses/{course_id}")
 def get_course_detail(course_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    course = db.query(Course).filter(Course.id == course_id).first()
+    course = db.query(Course).options(
+        joinedload(Course.modules).joinedload(Module.lessons)
+    ).filter(Course.id == course_id).first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
     completed_lesson_ids = set(
-        lp.lesson_id for lp in db.query(LessonProgress).filter(
+        lp[0] for lp in db.query(LessonProgress.lesson_id).filter(
             LessonProgress.trainee_id == current_user.id,
             LessonProgress.completed == True
         ).all()
@@ -108,7 +117,8 @@ def get_course_detail(course_id: int, current_user: User = Depends(get_current_u
 
     cert = db.query(Certificate).filter(
         Certificate.trainee_id == current_user.id,
-        Certificate.course_id == course.id
+        Certificate.course_id == course.id,
+        Certificate.revoked == False
     ).first()
 
     return {
@@ -126,7 +136,7 @@ def get_course_detail(course_id: int, current_user: User = Depends(get_current_u
 
 @router.get("/lessons/{lesson_id}")
 def get_lesson(lesson_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
+    lesson = db.query(Lesson).options(joinedload(Lesson.module)).filter(Lesson.id == lesson_id).first()
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
 
@@ -180,7 +190,7 @@ def mark_lesson_complete(
 
 @router.get("/quizzes/{quiz_id}")
 def get_quiz(quiz_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
+    quiz = db.query(Quiz).options(selectinload(Quiz.questions)).filter(Quiz.id == quiz_id).first()
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz not found")
 
@@ -208,7 +218,7 @@ def submit_quiz(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
+    quiz = db.query(Quiz).options(selectinload(Quiz.questions), joinedload(Quiz.course)).filter(Quiz.id == quiz_id).first()
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz not found")
 

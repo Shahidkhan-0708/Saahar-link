@@ -20,10 +20,10 @@ class User(Base):
     email = Column(String(255), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
     full_name = Column(String(255), nullable=False)
-    role = Column(SQLEnum(UserRole), default=UserRole.TRAINEE, nullable=False)
+    role = Column(SQLEnum(UserRole), default=UserRole.TRAINEE, nullable=False, index=True)
     phone = Column(String(50), nullable=True)
     location = Column(String(255), nullable=True, default="Rampur, Uttar Pradesh")
-    institute_id = Column(Integer, ForeignKey("institutes.id"), nullable=True)
+    institute_id = Column(Integer, ForeignKey("institutes.id"), nullable=True, index=True)
     pacs_name = Column(String(255), nullable=True, default="PACS Rampur Cooperative")
     avatar_url = Column(String(500), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
@@ -44,7 +44,7 @@ class Institute(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
-    code = Column(String(50), unique=True, nullable=False)
+    code = Column(String(50), unique=True, index=True, nullable=False)
     city = Column(String(100), nullable=False)
     state = Column(String(100), nullable=False)
     contact_email = Column(String(255), nullable=True)
@@ -58,9 +58,9 @@ class Programme(Base):
     __tablename__ = "programmes"
 
     id = Column(Integer, primary_key=True, index=True)
-    institute_id = Column(Integer, ForeignKey("institutes.id"), nullable=False)
+    institute_id = Column(Integer, ForeignKey("institutes.id"), nullable=False, index=True)
     title = Column(String(255), nullable=False)
-    code = Column(String(50), unique=True, nullable=False)
+    code = Column(String(50), unique=True, index=True, nullable=False)
     description = Column(Text, nullable=True)
     duration_weeks = Column(Integer, default=6)
     is_active = Column(Boolean, default=True)
@@ -74,13 +74,13 @@ class Batch(Base):
     __tablename__ = "batches"
 
     id = Column(Integer, primary_key=True, index=True)
-    programme_id = Column(Integer, ForeignKey("programmes.id"), nullable=False)
+    programme_id = Column(Integer, ForeignKey("programmes.id"), nullable=False, index=True)
     name = Column(String(100), nullable=False)
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
     max_capacity = Column(Integer, default=40)
-    trainer_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    status = Column(String(50), default="IN_PROGRESS") # UPCOMING, IN_PROGRESS, COMPLETED
+    trainer_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    status = Column(String(50), default="IN_PROGRESS", index=True) # UPCOMING, IN_PROGRESS, COMPLETED
 
     programme = relationship("Programme", back_populates="batches")
     enrollments = relationship("Enrollment", back_populates="batch")
@@ -90,9 +90,9 @@ class Enrollment(Base):
     __tablename__ = "enrollments"
 
     id = Column(Integer, primary_key=True, index=True)
-    trainee_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    batch_id = Column(Integer, ForeignKey("batches.id"), nullable=False)
-    status = Column(String(50), default="ACTIVE") # ACTIVE, COMPLETED, DROPPED
+    trainee_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    batch_id = Column(Integer, ForeignKey("batches.id"), nullable=False, index=True)
+    status = Column(String(50), default="ACTIVE", index=True) # ACTIVE, COMPLETED, DROPPED
     enrolled_at = Column(DateTime, default=datetime.datetime.utcnow)
     completion_date = Column(DateTime, nullable=True)
 
@@ -103,7 +103,7 @@ class Timetable(Base):
     __tablename__ = "timetables"
 
     id = Column(Integer, primary_key=True, index=True)
-    batch_id = Column(Integer, ForeignKey("batches.id"), nullable=False)
+    batch_id = Column(Integer, ForeignKey("batches.id"), nullable=False, index=True)
     day_of_week = Column(String(20), nullable=False) # Monday, Tuesday...
     start_time = Column(String(10), nullable=False) # "09:30"
     end_time = Column(String(10), nullable=False) # "12:30"
@@ -116,9 +116,9 @@ class Course(Base):
     __tablename__ = "courses"
 
     id = Column(Integer, primary_key=True, index=True)
-    programme_id = Column(Integer, ForeignKey("programmes.id"), nullable=False)
+    programme_id = Column(Integer, ForeignKey("programmes.id"), nullable=False, index=True)
     title = Column(String(255), nullable=False)
-    code = Column(String(50), unique=True, nullable=False)
+    code = Column(String(50), unique=True, index=True, nullable=False)
     description = Column(Text, nullable=True)
     thumbnail = Column(String(500), nullable=True)
     total_lessons = Column(Integer, default=5)
@@ -134,7 +134,7 @@ class Module(Base):
     __tablename__ = "modules"
 
     id = Column(Integer, primary_key=True, index=True)
-    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
+    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False, index=True)
     title = Column(String(255), nullable=False)
     order = Column(Integer, default=1)
 
@@ -145,7 +145,7 @@ class Lesson(Base):
     __tablename__ = "lessons"
 
     id = Column(Integer, primary_key=True, index=True)
-    module_id = Column(Integer, ForeignKey("modules.id"), nullable=False)
+    module_id = Column(Integer, ForeignKey("modules.id"), nullable=False, index=True)
     title = Column(String(255), nullable=False)
     order = Column(Integer, default=1)
     duration_minutes = Column(Integer, default=15)
@@ -161,9 +161,9 @@ class LessonProgress(Base):
     __tablename__ = "lesson_progress"
 
     id = Column(Integer, primary_key=True, index=True)
-    trainee_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    lesson_id = Column(Integer, ForeignKey("lessons.id"), nullable=False)
-    completed = Column(Boolean, default=False)
+    trainee_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    lesson_id = Column(Integer, ForeignKey("lessons.id"), nullable=False, index=True)
+    completed = Column(Boolean, default=False, index=True)
     completed_at = Column(DateTime, nullable=True)
 
     trainee = relationship("User", back_populates="lesson_progresses")
@@ -173,7 +173,7 @@ class Quiz(Base):
     __tablename__ = "quizzes"
 
     id = Column(Integer, primary_key=True, index=True)
-    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
+    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False, index=True)
     title = Column(String(255), nullable=False)
     passing_score = Column(Integer, default=70) # 70%
 
@@ -185,7 +185,7 @@ class QuizQuestion(Base):
     __tablename__ = "quiz_questions"
 
     id = Column(Integer, primary_key=True, index=True)
-    quiz_id = Column(Integer, ForeignKey("quizzes.id"), nullable=False)
+    quiz_id = Column(Integer, ForeignKey("quizzes.id"), nullable=False, index=True)
     question_text = Column(Text, nullable=False)
     options_json = Column(Text, nullable=False) # JSON list of string options
     correct_answer_index = Column(Integer, nullable=False)
@@ -197,10 +197,10 @@ class QuizAttempt(Base):
     __tablename__ = "quiz_attempts"
 
     id = Column(Integer, primary_key=True, index=True)
-    quiz_id = Column(Integer, ForeignKey("quizzes.id"), nullable=False)
-    trainee_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    quiz_id = Column(Integer, ForeignKey("quizzes.id"), nullable=False, index=True)
+    trainee_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     score = Column(Float, nullable=False) # e.g. 85.0
-    passed = Column(Boolean, default=False)
+    passed = Column(Boolean, default=False, index=True)
     answers_json = Column(Text, nullable=True)
     attempted_at = Column(DateTime, default=datetime.datetime.utcnow)
 
@@ -212,8 +212,8 @@ class Certificate(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     certificate_id = Column(String(100), unique=True, index=True, nullable=False)
-    trainee_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
+    trainee_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False, index=True)
     issue_date = Column(DateTime, default=datetime.datetime.utcnow)
     issuer_name = Column(String(255), default="National Council for Cooperative Training (NCCT)")
     grade = Column(String(10), default="A+")
@@ -222,7 +222,7 @@ class Certificate(Base):
     public_key_pem = Column(Text, nullable=False)
     verification_url = Column(String(500), nullable=False)
     metadata_json = Column(Text, nullable=True)
-    revoked = Column(Boolean, default=False)
+    revoked = Column(Boolean, default=False, index=True)
 
     trainee = relationship("User", back_populates="certificates")
     course = relationship("Course", back_populates="certificates")
@@ -231,7 +231,7 @@ class Skill(Base):
     __tablename__ = "skills"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), unique=True, nullable=False)
+    name = Column(String(100), unique=True, index=True, nullable=False)
     category = Column(String(100), default="Cooperative Management")
 
     trainee_skills = relationship("TraineeSkill", back_populates="skill")
@@ -240,8 +240,8 @@ class TraineeSkill(Base):
     __tablename__ = "trainee_skills"
 
     id = Column(Integer, primary_key=True, index=True)
-    trainee_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    skill_id = Column(Integer, ForeignKey("skills.id"), nullable=False)
+    trainee_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    skill_id = Column(Integer, ForeignKey("skills.id"), nullable=False, index=True)
     proficiency_level = Column(Integer, default=3) # 1 to 5
     verified = Column(Boolean, default=True)
     verified_by_cert_id = Column(String(100), nullable=True)
@@ -253,7 +253,7 @@ class Job(Base):
     __tablename__ = "jobs"
 
     id = Column(Integer, primary_key=True, index=True)
-    employer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    employer_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     pacs_name = Column(String(255), nullable=False)
     title = Column(String(255), nullable=False)
     location = Column(String(255), nullable=False)
@@ -261,7 +261,7 @@ class Job(Base):
     description = Column(Text, nullable=False)
     required_skills_json = Column(Text, nullable=False) # JSON list of skill names
     min_experience_years = Column(Float, default=0.0)
-    status = Column(String(50), default="OPEN") # OPEN, CLOSED
+    status = Column(String(50), default="OPEN", index=True) # OPEN, CLOSED
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     employer = relationship("User", back_populates="posted_jobs")
@@ -271,10 +271,10 @@ class JobApplication(Base):
     __tablename__ = "job_applications"
 
     id = Column(Integer, primary_key=True, index=True)
-    job_id = Column(Integer, ForeignKey("jobs.id"), nullable=False)
-    trainee_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    job_id = Column(Integer, ForeignKey("jobs.id"), nullable=False, index=True)
+    trainee_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     applied_at = Column(DateTime, default=datetime.datetime.utcnow)
-    status = Column(String(50), default="APPLIED") # APPLIED, SHORTLISTED, OFFERED, REJECTED
+    status = Column(String(50), default="APPLIED", index=True) # APPLIED, SHORTLISTED, OFFERED, REJECTED
     match_score_json = Column(Text, nullable=True)
 
     job = relationship("Job", back_populates="applications")
@@ -286,10 +286,10 @@ class Device(Base):
     id = Column(Integer, primary_key=True, index=True)
     device_id = Column(String(100), unique=True, index=True, nullable=False)
     name = Column(String(255), nullable=False)
-    institute_id = Column(Integer, ForeignKey("institutes.id"), nullable=False)
+    institute_id = Column(Integer, ForeignKey("institutes.id"), nullable=False, index=True)
     device_type = Column(String(50), default="KIOSK") # KIOSK, TABLET, ESP32
     location_room = Column(String(100), default="Main Entrance Kiosk")
-    status = Column(String(50), default="ONLINE") # ONLINE, OFFLINE
+    status = Column(String(50), default="ONLINE", index=True) # ONLINE, OFFLINE
     last_heartbeat = Column(DateTime, default=datetime.datetime.utcnow)
 
     institute = relationship("Institute", back_populates="devices")
@@ -301,10 +301,10 @@ class AttendanceRecord(Base):
     id = Column(Integer, primary_key=True, index=True)
     event_id = Column(String(100), unique=True, index=True, nullable=False) # Deduplication key!
     device_id = Column(String(100), ForeignKey("devices.device_id"), nullable=False)
-    trainee_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    batch_id = Column(Integer, ForeignKey("batches.id"), nullable=True)
+    trainee_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    batch_id = Column(Integer, ForeignKey("batches.id"), nullable=True, index=True)
     method = Column(String(50), nullable=False) # FACE, NFC, QR, SIMULATOR
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow, index=True)
     location = Column(String(255), default="Rampur Smart Training Centre")
     signature = Column(String(255), nullable=True) # Hardware cryptographic signature / HMAC
     sync_status = Column(String(50), default="SYNCED") # SYNCED, PENDING

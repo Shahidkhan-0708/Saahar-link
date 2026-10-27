@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from typing import List, Optional
 import datetime
-from sqlalchemy.orm import Session
+import hashlib
+from sqlalchemy.orm import Session, joinedload, selectinload
 from backend.database import get_db
 from backend.models import Institute, Programme, Batch, Enrollment, Timetable, User, UserRole
 from backend.auth import get_current_user, require_roles
@@ -33,7 +34,10 @@ def list_institutes(db: Session = Depends(get_db)):
 
 @router.get("/programmes")
 def list_programmes(db: Session = Depends(get_db)):
-    programmes = db.query(Programme).all()
+    programmes = db.query(Programme).options(
+        joinedload(Programme.institute),
+        selectinload(Programme.batches)
+    ).all()
     results = []
     for p in programmes:
         results.append({
@@ -67,13 +71,25 @@ def create_programme(
 
 @router.get("/batches")
 def list_batches(programme_id: Optional[int] = None, db: Session = Depends(get_db)):
-    query = db.query(Batch)
+    query = db.query(Batch).options(
+        joinedload(Batch.programme),
+        selectinload(Batch.enrollments)
+    )
     if programme_id:
         query = query.filter(Batch.programme_id == programme_id)
     batches = query.all()
+
+    # Pre-fetch all trainers in a single query
+    trainer_ids = {b.trainer_id for b in batches if b.trainer_id}
+    trainers = {}
+    if trainer_ids:
+        trainers = {
+            u.id: u.full_name
+            for u in db.query(User.id, User.full_name).filter(User.id.in_(trainer_ids)).all()
+        }
+
     results = []
     for b in batches:
-        trainer = db.query(User).filter(User.id == b.trainer_id).first() if b.trainer_id else None
         results.append({
             "id": b.id,
             "name": b.name,
@@ -84,7 +100,7 @@ def list_batches(programme_id: Optional[int] = None, db: Session = Depends(get_d
             "max_capacity": b.max_capacity,
             "enrolled_count": len(b.enrollments),
             "status": b.status,
-            "trainer_name": trainer.full_name if trainer else "Unassigned"
+            "trainer_name": trainers.get(b.trainer_id, "Unassigned")
         })
     return results
 
@@ -145,7 +161,10 @@ def get_my_enrollments(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    enrollments = db.query(Enrollment).filter(Enrollment.trainee_id == current_user.id).all()
+    enrollments = db.query(Enrollment).options(
+        joinedload(Enrollment.batch).joinedload(Batch.programme)
+    ).filter(Enrollment.trainee_id == current_user.id).all()
+    
     results = []
     for e in enrollments:
         b = e.batch
@@ -167,8 +186,6 @@ def get_my_enrollments(
 # =====================================================================
 # PACS ERP SIMULATION SANDBOX (SIH #26087 MINISTRY PROTOCOLS)
 # =====================================================================
-
-import hashlib
 
 class DayBookCloseRequest(BaseModel):
     society_id: str = "PACS-UP-RAMPUR-004"

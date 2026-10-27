@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import json
 import datetime
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 from backend.database import get_db
 from backend.models import Job, JobApplication, User, UserRole, TraineeSkill, Certificate
 from backend.auth import get_current_user, require_roles
@@ -36,15 +36,19 @@ def list_jobs(
     trainee_skill_names = []
     has_cert = False
     if current_user and current_user.role == UserRole.TRAINEE:
-        t_skills = db.query(TraineeSkill).filter(TraineeSkill.trainee_id == current_user.id).all()
+        t_skills = db.query(TraineeSkill).options(joinedload(TraineeSkill.skill)).filter(TraineeSkill.trainee_id == current_user.id).all()
         trainee_skill_names = [ts.skill.name for ts in t_skills if ts.skill]
-        has_cert = db.query(Certificate).filter(Certificate.trainee_id == current_user.id).first() is not None
+        has_cert = db.query(Certificate.id).filter(
+            Certificate.trainee_id == current_user.id,
+            Certificate.revoked == False
+        ).first() is not None
 
-    # Get user's applied jobs
+    # Get user's applied jobs in a single scalar query
     applied_job_ids = set()
     if current_user:
-        apps = db.query(JobApplication).filter(JobApplication.trainee_id == current_user.id).all()
-        applied_job_ids = {a.job_id for a in apps}
+        applied_job_ids = {
+            a[0] for a in db.query(JobApplication.job_id).filter(JobApplication.trainee_id == current_user.id).all()
+        }
 
     for j in jobs:
         req_skills = json.loads(j.required_skills_json) if j.required_skills_json else []
@@ -110,14 +114,18 @@ def get_job_candidates(
 
     required_skills = json.loads(job.required_skills_json) if job.required_skills_json else []
 
-    # Query all trainees
-    trainees = db.query(User).filter(User.role == UserRole.TRAINEE).all()
-    candidates = []
+    # Query all trainees with eager loading for skills, certificates, and applications
+    trainees = db.query(User).options(
+        joinedload(User.skills).joinedload(TraineeSkill.skill),
+        selectinload(User.certificates),
+        selectinload(User.job_applications)
+    ).filter(User.role == UserRole.TRAINEE).all()
 
+    candidates = []
     for t in trainees:
-        t_skills = db.query(TraineeSkill).filter(TraineeSkill.trainee_id == t.id).all()
-        skill_names = [ts.skill.name for ts in t_skills if ts.skill]
-        cert = db.query(Certificate).filter(Certificate.trainee_id == t.id).first()
+        skill_names = [ts.skill.name for ts in t.skills if ts.skill]
+        valid_certs = [c for c in t.certificates if not c.revoked]
+        cert = valid_certs[0] if valid_certs else None
 
         match_score = ExplainableCandidateMatcher.calculate_match(
             candidate_skills=skill_names,
@@ -129,11 +137,7 @@ def get_job_candidates(
             required_experience_years=job.min_experience_years
         )
 
-        # Check existing application
-        app = db.query(JobApplication).filter(
-            JobApplication.job_id == job.id,
-            JobApplication.trainee_id == t.id
-        ).first()
+        app = next((a for a in t.job_applications if a.job_id == job.id), None)
 
         candidates.append({
             "trainee_id": t.id,
@@ -149,7 +153,6 @@ def get_job_candidates(
             "application_id": app.id if app else None
         })
 
-    # Sort deterministically by overall match descending
     candidates.sort(key=lambda x: x["match"]["overall_match"], reverse=True)
     return {
         "job": {
@@ -179,9 +182,12 @@ def apply_to_job(
     if existing:
         return {"message": "Already applied to this PACS position", "application_id": existing.id, "status": existing.status}
 
-    t_skills = db.query(TraineeSkill).filter(TraineeSkill.trainee_id == current_user.id).all()
+    t_skills = db.query(TraineeSkill).options(joinedload(TraineeSkill.skill)).filter(TraineeSkill.trainee_id == current_user.id).all()
     skill_names = [ts.skill.name for ts in t_skills if ts.skill]
-    cert = db.query(Certificate).filter(Certificate.trainee_id == current_user.id).first()
+    cert = db.query(Certificate).filter(
+        Certificate.trainee_id == current_user.id,
+        Certificate.revoked == False
+    ).first()
     required_skills = json.loads(job.required_skills_json) if job.required_skills_json else []
 
     match_score = ExplainableCandidateMatcher.calculate_match(
@@ -217,7 +223,9 @@ def get_my_applications(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    apps = db.query(JobApplication).filter(JobApplication.trainee_id == current_user.id).all()
+    apps = db.query(JobApplication).options(
+        joinedload(JobApplication.job)
+    ).filter(JobApplication.trainee_id == current_user.id).all()
     results = []
     for a in apps:
         j = a.job
@@ -240,7 +248,10 @@ def get_recruiter_applications(
     current_user: User = Depends(require_roles([UserRole.RECRUITER, UserRole.INSTITUTE_ADMIN, UserRole.SUPER_ADMIN])),
     db: Session = Depends(get_db)
 ):
-    apps = db.query(JobApplication).order_by(JobApplication.applied_at.desc()).all()
+    apps = db.query(JobApplication).options(
+        joinedload(JobApplication.job),
+        joinedload(JobApplication.trainee)
+    ).order_by(JobApplication.applied_at.desc()).all()
     results = []
     for a in apps:
         j = a.job
@@ -288,4 +299,3 @@ def get_job_fairness_audit(
     
     audit_data = AlgorithmicFairnessAuditor.audit_job_matching(job_id, title, pacs)
     return audit_data
-

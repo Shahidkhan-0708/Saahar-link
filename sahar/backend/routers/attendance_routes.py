@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from typing import List, Optional
 import datetime
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from backend.database import get_db
 from backend.models import AttendanceRecord, Device, User, UserRole, Batch
 from backend.auth import get_current_user, require_roles
@@ -148,7 +148,7 @@ def get_all_attendance(
     db: Session = Depends(get_db),
     admin: User = Depends(require_roles([UserRole.INSTITUTE_ADMIN, UserRole.SUPER_ADMIN, UserRole.TRAINER]))
 ):
-    records = db.query(AttendanceRecord).order_by(AttendanceRecord.timestamp.desc()).limit(100).all()
+    records = db.query(AttendanceRecord).options(joinedload(AttendanceRecord.trainee)).order_by(AttendanceRecord.timestamp.desc()).limit(100).all()
     results = []
     for r in records:
         trainee = r.trainee

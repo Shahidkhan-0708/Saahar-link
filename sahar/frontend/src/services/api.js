@@ -24,25 +24,63 @@ export const setAuthToken = (token) => {
   } catch {}
 };
 
+const inflightRequests = new Map();
+const getCache = new Map();
+const CACHE_TTL_MS = 2500; // 2.5s short cache for rapid re-renders and page navigation
+
 export async function request(endpoint, options = {}) {
+  const method = (options.method || 'GET').toUpperCase();
   const token = getAuthToken();
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-    ...(options.headers || {})
-  };
+  const cacheKey = `${method}:${endpoint}:${token || ''}`;
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.detail || `Request failed with status ${response.status}`);
+  // For GET requests, return cached result if within short TTL
+  if (method === 'GET' && !options.noCache) {
+    const cached = getCache.get(cacheKey);
+    if (cached && (Date.now() - cached.ts) < CACHE_TTL_MS) {
+      return cached.data;
+    }
+    // Deduplicate concurrent in-flight requests
+    if (inflightRequests.has(cacheKey)) {
+      return inflightRequests.get(cacheKey);
+    }
   }
 
-  return response.json();
+  const fetchPromise = (async () => {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      ...(options.headers || {})
+    };
+
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || `Request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (method === 'GET') {
+      getCache.set(cacheKey, { data, ts: Date.now() });
+    } else {
+      getCache.clear();
+    }
+    return data;
+  })();
+
+  if (method === 'GET' && !options.noCache) {
+    inflightRequests.set(cacheKey, fetchPromise);
+    try {
+      return await fetchPromise;
+    } finally {
+      inflightRequests.delete(cacheKey);
+    }
+  }
+
+  return fetchPromise;
 }
 
 export const apiRequest = request;

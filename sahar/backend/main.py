@@ -2,9 +2,10 @@ import os
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from backend.database import engine, Base
+from backend.database import engine, Base, SessionLocal
 from backend.seed_data import seed_database
 from backend.routers import (
     auth_routes, erp_routes, lms_routes, attendance_routes,
@@ -26,6 +27,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Enable fast GZip compression for API responses >= 1KB
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 # Include all modular routers
 app.include_router(auth_routes.router)
 app.include_router(erp_routes.router)
@@ -36,11 +40,28 @@ app.include_router(job_routes.router)
 app.include_router(ai_routes.router)
 app.include_router(analytics_routes.router)
 
+_startup_initialized = False
+
 @app.on_event("startup")
 def on_startup():
-    # Create tables and seed data if not present
-    Base.metadata.create_all(bind=engine)
-    seed_database()
+    global _startup_initialized
+    if _startup_initialized:
+        return
+    try:
+        from backend.models import User
+        db = SessionLocal()
+        user_exists = db.query(User.id).first()
+        db.close()
+        if not user_exists:
+            Base.metadata.create_all(bind=engine)
+            seed_database()
+    except Exception:
+        try:
+            Base.metadata.create_all(bind=engine)
+            seed_database()
+        except Exception as e:
+            print(f"Startup warning: {e}")
+    _startup_initialized = True
 
 @app.get("/api/health")
 def api_health():
