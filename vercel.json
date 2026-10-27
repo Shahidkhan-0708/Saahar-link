@@ -1,4 +1,7 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "cd sahar/frontend && npm install",
   "buildCommand": "cd sahar/frontend && npm run build",
   "outputDirectory": "sahar/frontend/dist",
   "rewrites": [

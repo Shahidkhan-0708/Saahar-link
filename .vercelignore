@@ -1,0 +1,11 @@
+# Ignore everything not related to the sahar deployment
+apps/
+packages/
+archive/
+docs/
+infra/
+turbo.json
+pnpm-lock.yaml
+pnpm-workspace.yaml
+*.pdf
+*.docx
