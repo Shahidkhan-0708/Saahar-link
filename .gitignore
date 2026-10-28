@@ -25,3 +25,6 @@ dist/
 *.sqlite
 *.sqlite3
 data/
+
+# Screenshots
+image*.png

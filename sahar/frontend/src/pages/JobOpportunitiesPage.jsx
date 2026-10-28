@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 export default function JobOpportunitiesPage() {
-  const { appliedJobIds, toggleApplyJob, bookmarkedJobIds, toggleBookmarkJob, showToast } = useApp();
+  const { currentUser, appliedJobIds, toggleApplyJob, bookmarkedJobIds, toggleBookmarkJob, showToast } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedLocation, setSelectedLocation] = useState('All');
@@ -433,8 +433,25 @@ export default function JobOpportunitiesPage() {
               </div>
             </div>
 
-            <div className="h-32 rounded-xl overflow-hidden bg-slate-100">
-              <img src="/assets/rohit_kumar.jpg" alt="Profile readiness" className="w-full h-full object-cover object-top" />
+            <div className="relative h-36 rounded-xl overflow-hidden bg-slate-100 border border-slate-200/80 shadow-xs group">
+              <img 
+                src="/assets/impact_laptop.jpg" 
+                alt="Cooperative Career & Digital Readiness" 
+                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/35 to-transparent flex items-end p-3">
+                <div className="flex items-center gap-2.5 w-full">
+                  <img
+                    src={currentUser?.avatar || '/assets/rohit_kumar.jpg'}
+                    alt={currentUser?.name || 'Trainee profile'}
+                    className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-xs shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-blue-300">NCCT Career Cadre</div>
+                    <div className="text-xs font-bold text-white truncate">{currentUser?.name || 'Ramesh Kumar'} • 85% Ready</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
