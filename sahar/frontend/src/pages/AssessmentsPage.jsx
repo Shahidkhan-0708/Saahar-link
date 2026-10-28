@@ -254,17 +254,31 @@ export default function AssessmentsPage() {
             </div>
 
             {/* Score Ring / Pill */}
-            <div className="bg-blue-50/80 border border-blue-200 rounded-2xl p-4 sm:px-6 flex items-center gap-4 shrink-0">
-              <div className="text-right">
-                <div className="text-3xl font-black text-[#2563EB] tracking-tight">36 / 40</div>
-                <div className="text-xs font-bold text-slate-600">Total Marks (90%)</div>
+            <div className="bg-gradient-to-br from-blue-50/90 via-slate-50/60 to-indigo-50/50 border border-blue-200/90 rounded-2xl py-4 px-6 sm:px-8 flex items-center gap-6 sm:gap-7 shrink-0 shadow-xs">
+              <div className="text-right flex flex-col justify-center">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Total Score</span>
+                <div className="flex items-baseline justify-end gap-1.5">
+                  <span className="text-3xl sm:text-4xl font-black text-[#2563EB] tracking-tight">36</span>
+                  <span className="text-base font-bold text-slate-400">/ 40</span>
+                </div>
+                <span className="text-xs font-semibold text-emerald-700 mt-1 flex items-center justify-end gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
+                  Distinction Grade
+                </span>
               </div>
-              <ProgressRing
-                percentage={90}
-                size={65}
-                strokeWidth={7}
-                color="#2563EB"
-              />
+
+              {/* Vertical subtle divider for clean separation */}
+              <div className="h-14 w-px bg-blue-200/80"></div>
+
+              <div className="flex flex-col items-center justify-center">
+                <ProgressRing
+                  percentage={90}
+                  size={72}
+                  strokeWidth={6.5}
+                  color="#2563EB"
+                  textSize="text-sm font-black"
+                />
+              </div>
             </div>
           </div>
 
